@@ -1,0 +1,3 @@
+[submodule "theano_ops"]
+	path = theano_ops
+	url = https://github.com/mpslxz/theano_ops
