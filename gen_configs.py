@@ -12,12 +12,12 @@ class ICVAE(TheanoModel):
 
     def __init__(self, init_params=None,
                  input_shape=None,
-                 decode_label=True,
+                 encode_label=False,
                  nb_hidden=1024,
                  lmbd=1e-4,
                  nb_latent=10):
 
-        self.decode_label = decode_label
+        self.encode_label = encode_label
         self.INPUT_SHAPE = input_shape
         self.init_params = init_params
         self.input_size = CONF.input_size[1] * CONF.input_size[2]
