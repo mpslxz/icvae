@@ -6,21 +6,23 @@ from theano_ops.Ops import dense
 from theano_ops.activations import sigmoid, tanh
 from theano_ops.base_model import TheanoModel
 import config as CONF
+from archs import dense_encoder, dense_decoder
 
 
 class ICVAE(TheanoModel):
 
     def __init__(self, init_params=None,
                  input_shape=None,
+                 target_shape=40,
                  encode_label=False,
-                 nb_hidden=1024,
+                 nb_hidden=2048,
                  lmbd=1e-4,
-                 nb_latent=10):
+                 nb_latent=200):
 
         self.encode_label = encode_label
-        self.INPUT_SHAPE = input_shape
+        self.target_size = target_shape
         self.init_params = init_params
-        self.input_size = CONF.input_size[1] * CONF.input_size[2]
+        self.input_size = 3 * 64 * 64
         self.lmbd = lmbd
         self.nb_latent = nb_latent
         self.encoded_label_size = 3 * self.nb_latent
@@ -69,30 +71,15 @@ class ICVAE(TheanoModel):
         return code
 
     def encoder(self, x):
-        l_enc_hid, _par = dense(x, self.input_size, self.nb_hidden,
-                                layer_name='encHid', init_params=self.get_params('encHid', self.init_params))
-        l_enc_hid = tanh(l_enc_hid)
-        self.params += _par
-        self.to_regularize.append(_par[0])
-
-        l_enc_hid_sec, _par = dense(
-            l_enc_hid, self.nb_hidden, self.nb_hidden / 2,
-            layer_name='encHidSec', init_params=self.get_params('encHidSec', self.init_params))
-        l_enc_hid_sec = tanh(l_enc_hid_sec)
-        self.params += _par
-        self.to_regularize.append(_par[0])
-
-        l_enc_mu, _par = dense(
-            l_enc_hid_sec, self.nb_hidden / 2, self.nb_latent, layer_name='encMu', init_params=self.get_params('encMu', self.init_params))
-        self.params += _par
-        self.to_regularize.append(_par[0])
-
-        l_enc_logsigma, _par = dense(
-            l_enc_hid_sec, self.nb_hidden / 2, self.nb_latent, layer_name='encLogsigma', init_params=self.get_params('encLogsigma', self.init_params))
-        self.params += _par
-        self.to_regularize.append(_par[0])
-
-        return l_enc_mu, l_enc_logsigma
+        mu, logsigma, params, to_reg = dense_encoder(x=x,
+                                                     theano_model=self,
+                                                     input_size=self.input_size,
+                                                     nb_hidden=self.nb_hidden,
+                                                     nb_latent=self.nb_latent,
+                                                     init_params=self.init_params)
+        self.params += params
+        self.to_regularize += to_reg
+        return mu, logsigma
 
     def sampler(self, mu, logsigma):
         l_z = self._sample_z(mu, logsigma).mean(axis=0)
@@ -104,23 +91,16 @@ class ICVAE(TheanoModel):
 
     def decoder(self, l_z, y):
         y_hat = self.label_encoder(y) if self.encode_label else y
+        label_size = self.encoded_label_size if self.encode_label else self.target_size
         l_z_class_conditional = T.concatenate([l_z, y_hat], axis=1)
-        l_dec_hid_sec, _par = dense(
-            l_z_class_conditional, self.nb_latent + self.encoded_label_size, self.nb_hidden / 2, layer_name='decHidSec', init_params=self.get_params('decHidSec', self.init_params))
-        self.params += _par
-        self.to_regularize.append(_par[0])
-        l_dec_hid_sec = tanh(l_dec_hid_sec)
 
-        l_dec_hid, _par = dense(
-            l_dec_hid_sec, self.nb_hidden / 2, self.nb_hidden, layer_name='decHid', init_params=self.get_params('decHid', self.init_params))
-        self.params += _par
-        self.to_regularize.append(_par[0])
-        l_dec_hid = tanh(l_dec_hid)
-
-        l_rec_x, _par = dense(
-            l_dec_hid, self.nb_hidden, self.input_size, layer_name='decMu', init_params=self.get_params('decMu', self.init_params))
-        self.params += _par
-        self.to_regularize.append(_par[0])
-        l_rec_x = sigmoid(l_rec_x)
-        outputs = l_rec_x
+        outputs, params, to_reg = dense_decoder(x=l_z_class_conditional,
+                                                theano_model=self,
+                                                label_size=label_size,
+                                                input_size=self.input_size,
+                                                nb_hidden=self.nb_hidden,
+                                                nb_latent=self.nb_latent,
+                                                init_params=self.init_params))
+        self.params += params
+        self.to_regularize += to_reg
         return outputs
