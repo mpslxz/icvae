@@ -8,7 +8,7 @@ import gen_configs as CONF
 class GeneratorModel(TheanoModel):
 
     def _def_tensors(self):
-        self.x = T.matrix(dtype=theano.config.floatX, name='G_x')
+        self.x = T.tensor4(dtype=theano.config.floatX, name='G_x')
         self.y = T.matrix(dtype='uint8', name='G_y')
 
     def _def_arch(self, init_params):
@@ -39,3 +39,12 @@ class GeneratorModel(TheanoModel):
             [self.x, self.y], outputs=self.outputs, mode=self.mode)
         self.get_latent = theano.function(
             [self.x], outputs=self.latent)
+
+    def predict(self, x, y):
+        return self.predict_fcn(x, y)
+
+    def test(self, x, y):
+        return self.batch_test_fcn(x, y)
+
+    def get_latent(self, x):
+        return self.model._get_latent(x)
