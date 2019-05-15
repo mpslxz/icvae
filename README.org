@@ -1,7 +1,7 @@
 * Independent Conditional VAE (ICVAE)
 - Paper: [[https://ieeexplore.ieee.org/document/8706960][Adaptive augmentation of medical data using independently conditional variational auto-encoders]]
 
-A convolutional version of the model has been trained on CelebA dataset, to learn appearance features of celebrities with and without hats.
+A simple convolutional version of the model has been trained on CelebA dataset, to learn appearance features of celebrities with and without hats.
 
 The model can add/remove hat to the photo.
 
@@ -11,4 +11,4 @@ The model can add/remove hat to the photo.
 | Original (without hat) | Hat added        |
 | [[./orig_no_hat.png]]      | [[./add_hat.png]]    |
 
-
+- The results can be potentially imroved via state-of-the-art decoders.
