@@ -11,4 +11,7 @@ The model can add/remove hat to the photo.
 | Original (without hat) | Hat added        |
 | [[./orig_no_hat.png]]      | [[./add_hat.png]]    |
 
+- Traverse of the latent space with different labels when trained on [[https://github.com/deepmind/dsprites-dataset][dSprite dataset]] with latent size 16 (first 16) and label size 4 (last 4):
+[[./random.gif]]
+
 - The results can be potentially imroved via state-of-the-art decoders.
