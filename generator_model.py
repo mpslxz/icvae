@@ -9,11 +9,11 @@ class GeneratorModel(TheanoModel):
 
     def _def_tensors(self):
         self.x = T.tensor4(dtype=theano.config.floatX, name='G_x')
-        self.y = T.matrix(dtype='uint8', name='G_y')
+        self.y = T.tensor4(dtype='uint8', name='G_y')
 
     def _def_arch(self, init_params):
-        self.model = CONF.ICVAE(
-            init_params=init_params, input_shape=self.INPUT_SHAPE)
+        self.model = CONF.ICVAE(init_params=init_params,
+                                input_shape=self.INPUT_SHAPE)
         self.x = self.model.x
         self.y = self.model.y
         self.latent = self.model.l_z
